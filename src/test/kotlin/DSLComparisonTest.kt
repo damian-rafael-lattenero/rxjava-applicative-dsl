@@ -76,11 +76,11 @@ class DSLComparisonTests {
         // DSL Version - CLEAN:
         val dslResult: Single<String> =
             ::buildUserSummary.liftSingle()
-                .sequential(getUserService())
-                .sequential(getProfileService("u1"))  // En realidad sería automático con el DSL
-                .sequential(getPreferencesService("p1"))
-                .sequential(getSettingsService("s1"))
-                .sequential(getThemeService("t1"))
+                .flatMapWith(getUserService())
+                .flatMapWith(getProfileService("u1"))  // En realidad sería automático con el DSL
+                .flatMapWith(getPreferencesService("p1"))
+                .flatMapWith(getSettingsService("s1"))
+                .flatMapWith(getThemeService("t1"))
 
         // Benchmark both approaches
         println("\n📊 BENCHMARKING - Running each version 5 times:")
@@ -193,11 +193,11 @@ class DSLComparisonTests {
         // DSL Version - CLEAN:
         val dslResult: Single<String> =
             ::buildDashboard.liftSingle()
-                .concurrent(getWeatherService())
-                .concurrent(getNewsService())
-                .concurrent(getStocksService())
-                .concurrent(getSportsService())
-                .concurrent(getTrafficService())
+                .zipWith(getWeatherService())
+                .zipWith(getNewsService())
+                .zipWith(getStocksService())
+                .zipWith(getSportsService())
+                .zipWith(getTrafficService())
 
         // Benchmark both approaches
         println("\n📊 BENCHMARKING - Running each version 5 times:")
@@ -348,13 +348,13 @@ class DSLComparisonTests {
         // DSL Version - BEAUTIFUL:
         val dslResult: Single<OrderSummary> =
             ::OrderSummary.liftSingle()
-                .concurrent(getCustomerService())           // parallel
-                .concurrent(getInventoryService())          // parallel
-                .concurrent(getShippingService())           // parallel
-                .sequential(validateOrderService(Customer("c1", "John"), Inventory("p1", 10)))  // sequential
-                .sequential(calculatePriceService(Inventory("p1", 10), Shipping("Express", 15.0))) // sequential
-                .concurrent(getTaxService())                // parallel
-                .sequential(processPaymentService(Customer("c1", "John"), Price(115.0, "USD"), Tax(0.08, 8.0))) // sequential
+                .zipWith(getCustomerService())           // parallel
+                .zipWith(getInventoryService())          // parallel
+                .zipWith(getShippingService())           // parallel
+                .flatMapWith(validateOrderService(Customer("c1", "John"), Inventory("p1", 10)))  // sequential
+                .flatMapWith(calculatePriceService(Inventory("p1", 10), Shipping("Express", 15.0))) // sequential
+                .zipWith(getTaxService())                // parallel
+                .flatMapWith(processPaymentService(Customer("c1", "John"), Price(115.0, "USD"), Tax(0.08, 8.0))) // sequential
 
         // Benchmark both approaches
         println("\n📊 BENCHMARKING - Running each version 5 times:")
@@ -538,26 +538,26 @@ class DSLComparisonTests {
         val stepA: Kleisli<RawData, ProcessedData> = { rawData ->
             println("DSL: Executing Step A - Data processing")
             ::ProcessedData.liftSingle()
-                .concurrent(enrichDataService(rawData))     // parallel
-                .concurrent(validateDataService(rawData))   // parallel
-                .sequential(cleanDataService(EnrichedData("raw", "meta"), Validation(true, "ok")))  // sequential
+                .zipWith(enrichDataService(rawData))     // parallel
+                .zipWith(validateDataService(rawData))   // parallel
+                .flatMapWith(cleanDataService(EnrichedData("raw", "meta"), Validation(true, "ok")))  // sequential
         }
 
         val stepB: Kleisli<ProcessedData, AnalysisResult> = { processed ->
             println("DSL: Executing Step B - Analysis")
             ::AnalysisResult.liftSingle()
-                .concurrent(runAnalysisService(processed))   // parallel
-                .concurrent(runMetricsService(processed))    // parallel
-                .sequential(generateInsightsService(Analysis(listOf("insight1")), Metrics(mapOf("accuracy" to 0.95))))  // sequential
+                .zipWith(runAnalysisService(processed))   // parallel
+                .zipWith(runMetricsService(processed))    // parallel
+                .flatMapWith(generateInsightsService(Analysis(listOf("insight1")), Metrics(mapOf("accuracy" to 0.95))))  // sequential
         }
 
         val stepC: Kleisli<AnalysisResult, FinalReport> = { analysis ->
             println("DSL: Executing Step C - Final reporting")
             ::FinalReport.liftSingle()
-                .sequential(Single.just(ProcessedData(EnrichedData("raw", "meta"), Validation(true, "ok"), CleanedData("raw"))))
-                .sequential(Single.just(analysis))
-                .concurrent(formatReportService(analysis))   // parallel
-                .concurrent(generateChartsService(analysis)) // parallel
+                .flatMapWith(Single.just(ProcessedData(EnrichedData("raw", "meta"), Validation(true, "ok"), CleanedData("raw"))))
+                .flatMapWith(Single.just(analysis))
+                .zipWith(formatReportService(analysis))   // parallel
+                .zipWith(generateChartsService(analysis)) // parallel
         }
 
         val dslResult: Single<FinalReport> =

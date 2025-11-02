@@ -1,7 +1,6 @@
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
-import utils.curried
 
 /**
  * Represents a Kleisli function: takes a value of type [A]
@@ -21,7 +20,7 @@ typealias KleisliNull<A, B> = (A?) -> Single<B>
  * combining them in parallel using `Single.zip`.
  */
 @JvmName("apPure")
-infix fun <A : Any, B : Any> Single<(A) -> B>.concurrent(applicativeValue: Single<A>): Single<B> =
+infix fun <A : Any, B : Any> Single<(A) -> B>.zipWith(applicativeValue: Single<A>): Single<B> =
     Single.zip(this, applicativeValue) { f, a -> f(a) }
 
 /**
@@ -31,14 +30,14 @@ infix fun <A : Any, B : Any> Single<(A) -> B>.concurrent(applicativeValue: Singl
  * to a value contained in another `Single`. Combines in parallel and flattens.
  */
 @JvmName("apKleisli")
-infix fun <A : Any, B : Any> Single<Kleisli<A, B>>.concurrent(applicativeValue: Single<A>): Single<B> =
+infix fun <A : Any, B : Any> Single<Kleisli<A, B>>.zipWith(applicativeValue: Single<A>): Single<B> =
     Single.zip(this, applicativeValue) { f, a -> f(a) }.join()
 
 /**
  * **Applicative with optional input**.
  */
 @JvmName("apNull")
-infix fun <A : Any, B : Any> Single<(A?) -> B>.concurrent(applicativeValue: Single<A>?): Single<B> =
+infix fun <A : Any, B : Any> Single<(A?) -> B>.zipWith(applicativeValue: Single<A>?): Single<B> =
     applicativeValue?.let { Single.zip(this, it) { f, a -> f(a) } }
         ?: this.map { it(null) }
 
@@ -46,7 +45,7 @@ infix fun <A : Any, B : Any> Single<(A?) -> B>.concurrent(applicativeValue: Sing
  * **Applicative Kleisli with optional input**.
  */
 @JvmName("apNullKleisli")
-infix fun <A : Any, B : Any> Single<KleisliNull<A, B>>.concurrent(applicativeValue: Single<A>?): Single<B> =
+infix fun <A : Any, B : Any> Single<KleisliNull<A, B>>.zipWith(applicativeValue: Single<A>?): Single<B> =
     applicativeValue?.let { Single.zip(this, it) { f, a -> f(a) }.join() }
         ?: this.flatMap { it(null) }
 
@@ -54,21 +53,21 @@ infix fun <A : Any, B : Any> Single<KleisliNull<A, B>>.concurrent(applicativeVal
  * **Monad (pure)**.
  */
 @JvmName("flatApPure")
-infix fun <A : Any, B : Any> Single<(A) -> B>.sequential(applicativeValue: Single<A>): Single<B> =
+infix fun <A : Any, B : Any> Single<(A) -> B>.flatMapWith(applicativeValue: Single<A>): Single<B> =
     this.flatMap { f -> applicativeValue.map(f) }
 
 /**
  * **Monad (Kleisli)**.
  */
 @JvmName("flatApKleisli")
-infix fun <A : Any, B : Any> Single<Kleisli<A, B>>.sequential(applicativeValue: Single<A>): Single<B> =
+infix fun <A : Any, B : Any> Single<Kleisli<A, B>>.flatMapWith(applicativeValue: Single<A>): Single<B> =
     this.flatMap { f -> applicativeValue.flatMap(f) }
 
 /**
  * **Monad with optional input**.
  */
 @JvmName("flatApNull")
-infix fun <A : Any, B : Any> Single<(A?) -> B>.sequential(applicativeValue: Single<A>?): Single<B> =
+infix fun <A : Any, B : Any> Single<(A?) -> B>.flatMapWith(applicativeValue: Single<A>?): Single<B> =
     applicativeValue?.let { this.flatMap { f -> it.map(f) } }
         ?: this.map { it(null) }
 
@@ -76,7 +75,7 @@ infix fun <A : Any, B : Any> Single<(A?) -> B>.sequential(applicativeValue: Sing
  * **Monad Kleisli with optional input**.
  */
 @JvmName("flatApNullKleisli")
-infix fun <A : Any, B : Any> Single<KleisliNull<A, B>>.sequential(applicativeValue: Single<A>?): Single<B> =
+infix fun <A : Any, B : Any> Single<KleisliNull<A, B>>.flatMapWith(applicativeValue: Single<A>?): Single<B> =
     applicativeValue?.let { this.flatMap { f -> it.flatMap(f) } }
         ?: this.flatMap { it(null) }
 
