@@ -1,5 +1,8 @@
-.gradle
-.idea
-build
-gradle
-./.idea*.hprof
+.gradle/
+build/
+out/
+.idea/
+*.iml
+*.hprof
+.DS_Store
+local.properties

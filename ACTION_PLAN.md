@@ -1,5 +1,15 @@
 # 🚀 Action Plan: Next Steps to Maximize Impact
 
+> **Historical note (2026-10-01).** This plan was written for the original
+> publication of this library on 2025-11-02, under a previous repository
+> location (`developer-hatch/rxjava-applicative-dsl`, since deleted; this repo
+> is the relocated home with full commit history). It is kept as a record of
+> the project's original intent: the "Coroutines version" anticipated in
+> Phase 5 eventually became
+> [KAP](https://github.com/damian-rafael-lattenero/kap), which supersedes the
+> evolution path described here. CI/coverage badges below were aspirational
+> templates and were never wired up.
+
 Roadmap to transform your DSL into a high-impact open source project.
 
 ---
@@ -140,7 +150,7 @@ jobs:
 ### Add Badges to README ⭐
 
 ```markdown
-[![Build](https://github.com/developer-hatch/rxjava-applicative-dsl/workflows/CI/badge.svg)](...)
+[![Build](https://github.com/damian-rafael-lattenero/rxjava-applicative-dsl/workflows/CI/badge.svg)](...)
 [![Coverage](https://codecov.io/gh/developer-hatch/rxjava-applicative-dsl/branch/main/graph/badge.svg)](...)
 [![Maven Central](https://img.shields.io/maven-central/v/...)](...)
 ```

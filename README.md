@@ -2,9 +2,16 @@
 
 > **Type-safe functional composition for RxJava Singles with clean, declarative syntax**
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-purple.svg)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3+-purple.svg)](https://kotlinlang.org)
 [![RxJava](https://img.shields.io/badge/RxJava-3.x-blue.svg)](https://github.com/ReactiveX/RxJava)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+> **Lineage.** This library is the ancestor of
+> [KAP](https://github.com/damian-rafael-lattenero/kap). It was born in 2025
+> from production pain — deeply nested `flatMap`/`zip` chains in an RxJava3
+> BFF — and its applicative/monadic core later evolved into type-safe
+> coroutine orchestration. First published 2025-11-02; repository relocated
+> to this account on 2026-10-01 (commit history preserved).
 
 ## The Problem
 
@@ -40,7 +47,7 @@ Elegant, type-safe composition with clear intent:
     .flatMapWith(validatePermissions())  // Then execute sequentially
 ```
 
-**Same result. 70% less code. 100% more readable.**
+**Same result. Far less code. Same type safety.**
 
 ---
 
@@ -50,7 +57,7 @@ Elegant, type-safe composition with clear intent:
 - ⚡ **Parallel & Sequential** - Explicit control over execution strategy
 - 🔗 **Kleisli Composition** - Chain reactive functions elegantly
 - 📦 **Up to 22 parameters** - Handle complex scenarios
-- 🧪 **Battle-tested** - Comprehensive test suite with real-world examples
+- 🧪 **Tested** — 34 unit tests across 6 suites: error propagation, disposal, 11-parameter compositions, concurrency semantics
 - 🚀 **Zero dependencies** - Only RxJava 3.x required
 
 ---
@@ -59,17 +66,28 @@ Elegant, type-safe composition with clear intent:
 
 ### Installation
 
-```gradle
-// Coming soon to Maven Central
-implementation 'com.github.developer-hatch:rxjava-applicative-dsl:1.0.0'
+Not published to Maven Central — this is a source-first library with zero
+dependencies beyond RxJava. Two ways to use it:
+
+**Option A: publish to your local Maven** (coordinates
+`io.github.damian-rafael-lattenero:rxjava-applicative-dsl:0.1.0`):
+
+```bash
+git clone https://github.com/damian-rafael-lattenero/rxjava-applicative-dsl
+cd rxjava-applicative-dsl && ./gradlew publishToMavenLocal
 ```
+
+```gradle
+implementation 'io.github.damian-rafael-lattenero:rxjava-applicative-dsl:0.1.0'
+```
+
+**Option B: copy the source** — `src/main/kotlin` is 5 small files; drop them
+into your project.
 
 ### Basic Usage
 
 ```kotlin
-import liftSingle
-import concurrent  // parallel execution
-import sequential  // sequential execution
+import utils.liftSingle
 
 // Define your service function
 fun createUser(name: String, email: String, age: Int): User {
@@ -139,7 +157,7 @@ Combine both for optimal performance:
 ### Before: Vanilla RxJava
 
 ```kotlin
-fun createMovileApp(): Single<MovileApp> {
+fun createMobileApp(): Single<MobileApp> {
     return fetchAppId().flatMap { id ->
         Single.zip(
             Single.just(id),
@@ -163,8 +181,8 @@ fun createMovileApp(): Single<MovileApp> {
 ### After: With DSL
 
 ```kotlin
-fun createMovileApp(): Single<MovileApp> {
-    return ::MovileApp.liftSingle()
+fun createMobileApp(): Single<MobileApp> {
+    return ::MobileApp.liftSingle()
         .flatMapWith(fetchAppId())          // Must fetch ID first
         .flatMapWith(fetchAppName())        // Then name
         .zipWith(fetchDescription())        // These can run in parallel
@@ -253,9 +271,7 @@ Includes:
 - ✅ 11-parameter complex compositions
 - ✅ Error handling and disposal
 - ✅ Concurrent vs sequential execution verification
-- ✅ Real-world scenarios (trading risk assessment)
-
----
+- ✅ Real-world scenarios (trading risk assessment)---
 
 ## 🤝 Contributing
 
@@ -286,8 +302,8 @@ Built with ❤️ for the RxJava community.
 
 ## 📬 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/developer-hatch/rxjava-applicative-dsl/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/developer-hatch/rxjava-applicative-dsl/discussions)
+- **Issues**: [GitHub Issues](https://github.com/damian-rafael-lattenero/rxjava-applicative-dsl/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/damian-rafael-lattenero/rxjava-applicative-dsl/discussions)
 
 ---
 

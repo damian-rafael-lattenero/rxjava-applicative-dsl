@@ -3,7 +3,7 @@ package utils
 import io.reactivex.rxjava3.core.Flowable
 
 // =================================================================
-// PROCESS FUNCTIONS FOR OBSERVABLE STREAM DSL (1-22 PARAMETERS)
+// PROCESS FUNCTIONS FOR FLOWABLE STREAM DSL (1-22 PARAMETERS)
 // =================================================================
 
 @JvmName("liftFlowable1")

@@ -392,8 +392,8 @@ Track:
 
 ## 🆘 Need Help?
 
-- [Open an issue](https://github.com/developer-hatch/rxjava-applicative-dsl/issues)
-- [Discussion forum](https://github.com/developer-hatch/rxjava-applicative-dsl/discussions)
+- [Open an issue](https://github.com/damian-rafael-lattenero/rxjava-applicative-dsl/issues)
+- [Discussion forum](https://github.com/damian-rafael-lattenero/rxjava-applicative-dsl/discussions)
 
 ---
 

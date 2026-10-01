@@ -1,30 +1,32 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    kotlin("jvm") version "1.7.10"
-    application
+    kotlin("jvm") version "2.3.21"
+    `maven-publish`
 }
 
-group = "org.applicative.functors"
-version = "1.0-SNAPSHOT"
+group = "io.github.damian-rafael-lattenero"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("io.reactivex.rxjava3:rxjava:3.1.9")
+    api("io.reactivex.rxjava3:rxjava:3.1.12")
     testImplementation(kotlin("test"))
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
-}
-
-application {
-    mainClass.set("MainKt")
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
 }

@@ -1,2 +1,1 @@
-rootProject.name = "applicative-functors"
-
+rootProject.name = "rxjava-applicative-dsl"
