@@ -3,6 +3,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class DSLComparisonTests {
 
@@ -125,8 +127,8 @@ class DSLComparisonTests {
         val vanillaValue = vanillaResult.blockingGet()
         val dslValue = dslResult.blockingGet()
 
-        assert(vanillaValue == dslValue)
-        assert(vanillaValue == "User: Alice, Profile: p1, Theme: Dark")
+        assertEquals(dslValue, vanillaValue, "DSL and vanilla should produce the same result")
+        assertEquals("User: Alice, Profile: p1, Theme: Dark", vanillaValue)
         println("✅ Test 1 passed - Sequential operations")
         println("=".repeat(60))
     }
@@ -242,8 +244,11 @@ class DSLComparisonTests {
         val vanillaValue = vanillaResult.blockingGet()
         val dslValue = dslResult.blockingGet()
 
-        assert(vanillaValue == dslValue)
-        assert(vanillaValue.contains("Sunny") && vanillaValue.contains("Breaking News"))
+        assertEquals(dslValue, vanillaValue, "DSL and vanilla should produce the same result")
+        assertTrue(
+            vanillaValue.contains("Sunny") && vanillaValue.contains("Breaking News"),
+            "Dashboard should contain weather and news"
+        )
         println("✅ Test 2 passed - Parallel operations")
         println("=".repeat(60))
     }
@@ -399,8 +404,8 @@ class DSLComparisonTests {
         val vanillaValue = vanillaResult.blockingGet()
         val dslValue = dslResult.blockingGet()
 
-        assert(vanillaValue.customer.name == dslValue.customer.name)
-        assert(vanillaValue.payment.status == dslValue.payment.status)
+        assertEquals(dslValue.customer.name, vanillaValue.customer.name, "Same customer expected")
+        assertEquals(dslValue.payment.status, vanillaValue.payment.status, "Same payment status expected")
         println("✅ Test 3 passed - Mixed complex operations")
         println("=".repeat(80))
     }
@@ -608,8 +613,8 @@ class DSLComparisonTests {
         val vanillaValue = vanillaResult.blockingGet()
         val dslValue = dslResult.blockingGet()
 
-        assert(vanillaValue.report.summary == dslValue.report.summary)
-        assert(vanillaValue.charts.chartData.size == dslValue.charts.chartData.size)
+        assertEquals(dslValue.report.summary, vanillaValue.report.summary, "Same report summary expected")
+        assertEquals(dslValue.charts.chartData.size, vanillaValue.charts.chartData.size, "Same chart count expected")
         println("Test 4 passed - Kleisli chain composition")
         println("=".repeat(90))
 
