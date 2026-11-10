@@ -2,6 +2,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers.io
 import org.junit.jupiter.api.Test
+import utils.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -9,15 +10,10 @@ import kotlin.test.assertEquals
 
 class ApplicativeTest {
 
-    private val bothSubscribed = CountDownLatch(0) // Change this value to 2 to run the test slowly
-    private val subscribeThreadsStillRunning = CountDownLatch(0) // Change this value to 1 to run the test slowly
-
     private fun <T: Any> createSingle(value: T): Single<T> =
         Observable
             .create { emitter ->
                 println("Subscribe $value on ${Thread.currentThread().name}")
-                bothSubscribed.countDown()
-                subscribeThreadsStillRunning.await(5, TimeUnit.SECONDS)
                 emitter.onNext(value)
                 emitter.onComplete()
             }

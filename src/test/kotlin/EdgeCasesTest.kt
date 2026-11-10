@@ -2,6 +2,7 @@ import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.jupiter.api.Test
+import utils.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import java.util.concurrent.TimeUnit
@@ -148,31 +149,38 @@ class EdgeCasesTest {
         @DisplayName("Should properly dispose when subscription is cancelled")
         fun `disposal - early cancellation disposes resources`() {
             val disposedCount = AtomicInteger(0)
-            
-            fun slowSingle(name: String) = Single.just(name)
-                .delay(500, TimeUnit.MILLISECONDS)
-                .doOnDispose {
-                    disposedCount.incrementAndGet()
-                    println("$name disposed")
+            val subscribed = java.util.concurrent.CountDownLatch(3)
+            // Never released: the sources hold until the test disposes them —
+            // the disposal assertion becomes a contract fact, not a race margin.
+            val release = java.util.concurrent.CountDownLatch(1)
+
+            fun holdingSingle(name: String): Single<String> =
+                Single.create<String> { emitter ->
+                    subscribed.countDown()
+                    release.await(5, TimeUnit.SECONDS)
+                    emitter.onSuccess(name)
                 }
-                .subscribeOn(Schedulers.io())
-            
+                    .doOnDispose {
+                        disposedCount.incrementAndGet()
+                        println("$name disposed")
+                    }
+                    .subscribeOn(Schedulers.io())
+
             val testObserver = { a: String, b: String, c: String -> "$a-$b-$c" }
                 .liftSingle()
-                .zipWith(slowSingle("A"))
-                .zipWith(slowSingle("B"))
-                .zipWith(slowSingle("C"))
+                .zipWith(holdingSingle("A"))
+                .zipWith(holdingSingle("B"))
+                .zipWith(holdingSingle("C"))
                 .test()
-            
-            // Cancel before completion
-            Thread.sleep(100)
+
+            assertTrue(subscribed.await(5, TimeUnit.SECONDS), "all branches must subscribe eagerly")
             testObserver.dispose()
-            
-            Thread.sleep(200)  // Give time for disposal
-            
+
             assertTrue(testObserver.isDisposed, "Should be disposed")
-            assertTrue(disposedCount.get() > 0, 
-                "Resources should be disposed (disposed: ${disposedCount.get()})")
+            assertEquals(
+                3, disposedCount.get(),
+                "Every held branch must be disposed synchronously (disposed: ${disposedCount.get()})"
+            )
         }
         
         @Test

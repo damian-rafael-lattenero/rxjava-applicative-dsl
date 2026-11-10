@@ -1,5 +1,6 @@
+package utils
+
 import io.reactivex.rxjava3.core.Single
-import utils.curried
 
 // Lift de valores directos
 @JvmName("liftValue")

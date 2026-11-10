@@ -1,3 +1,5 @@
+package utils
+
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
@@ -127,7 +129,10 @@ typealias StreamProcessor<A, B> = (A) -> Observable<B>
 
 /**
  * **Stream Combiner (combineLatest)**.
- * Re-evaluates function whenever any input stream emits.
+ * Re-evaluates the function whenever any input stream emits. combineLatest
+ * semantics: NOTHING is emitted until BOTH sources have emitted at least
+ * once — a silent function stream delays the whole output until its first
+ * emission.
  */
 @JvmName("combineStreams")
 infix fun <A : Any, B : Any> Observable<(A) -> B>.combine(stream: Observable<A>): Observable<B> =
@@ -151,16 +156,32 @@ infix fun <A : Any, B : Any> Observable<(A) -> B>.chain(stream: Observable<A>): 
     this.concatMap { f -> stream.map(f) }
 
 /**
- * **Stream Processor Chain (flatMap with stream functions)**.
+ * **Stream Processor Chain (concatMap over stream-emitting functions)**.
+ * Each emitted processor gets its own FRESH full pass over [stream] — a cold
+ * stream re-runs per processor; processors run sequentially, one full pass
+ * completing before the next starts (the [chain] family contract). Only the
+ * per-value inner observables of the current processor merge, by the
+ * processor's own nature.
  */
 @JvmName("chainProcessors")
 infix fun <A : Any, B : Any> Observable<StreamProcessor<A, B>>.chain(stream: Observable<A>): Observable<B> =
-    this.flatMap { processor -> stream.flatMap(processor) }
+    this.concatMap { processor -> stream.flatMap(processor) }
 
+/**
+ * **Flowable Stream Combiner (combineLatest)**.
+ * Same combineLatest semantics as the Observable variant: nothing is emitted
+ * until BOTH sources have emitted at least once. Backpressure follows the
+ * RxJava default for combineLatest (the slowest source paces the output).
+ */
 @JvmName("flowableCombine")
 infix fun <A : Any, B : Any> Flowable<(A) -> B>.combine(stream: Flowable<A>): Flowable<B> =
     Flowable.combineLatest(this, stream) { f, a -> f(a) }
 
+/**
+ * **Flowable Stream Zipper (zip)**.
+ * Waits for both streams to emit, then applies the function once per pair.
+ * Backpressure: zip requests in lockstep — the slow side paces the pair.
+ */
 @JvmName("flowablePair")
 infix fun <A : Any, B : Any> Flowable<(A) -> B>.pair(stream: Flowable<A>): Flowable<B> =
     Flowable.zip(this, stream) { f, a -> f(a) }

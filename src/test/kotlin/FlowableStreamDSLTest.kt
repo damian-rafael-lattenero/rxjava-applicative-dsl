@@ -1,6 +1,6 @@
 import io.reactivex.rxjava3.core.Flowable
 import org.junit.jupiter.api.Test
-import utils.liftFlowable
+import utils.*
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertTrue
 

@@ -57,7 +57,7 @@ Elegant, type-safe composition with clear intent:
 - ⚡ **Parallel & Sequential** - Explicit control over execution strategy
 - 🔗 **Kleisli Composition** - Chain reactive functions elegantly
 - 📦 **Up to 22 parameters** - Handle complex scenarios
-- 🧪 **Tested** — 34 unit tests across 6 suites: error propagation, disposal, 11-parameter compositions, concurrency semantics
+- 🧪 **Tested** — 51 unit tests across 8 suites: algebraic laws (identity, homomorphism, interchange, composition, Kleisli), error propagation, disposal, sequential chain semantics, 11/20-parameter compositions
 - 🚀 **Zero dependencies** - Only RxJava 3.x required
 
 ---
