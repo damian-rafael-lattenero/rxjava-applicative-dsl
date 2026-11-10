@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.test.assertEquals
 
 class ApplicativeTest {
 
@@ -50,7 +51,7 @@ class ApplicativeTest {
         val name: AppName,
         val description: Description?,   // nullable wrapper
         val version: VersionCode,
-        val active: Active,             // Boolean “pelado”
+        val active: Active,             // raw Boolean
         val owner: Owner,
         val platform: Platform,
         val region: Region,
@@ -332,9 +333,10 @@ class ApplicativeTest {
 
     private fun createBlockingSingle(
         name: String,
-        subscribeGate: CountDownLatch? = null,  // opcional: barrera para comprobar concurrencia
-        emitGate: CountDownLatch? = null,       // opcional: retener emision para ordenar tiempos
-        onDisposeCounter: AtomicInteger? = null // para verificar disposals
+        subscribeGate: CountDownLatch? = null,      // optional: barrier to verify concurrency
+        emitGate: CountDownLatch? = null,           // optional: hold emission to order timings
+        onDisposeCounter: AtomicInteger? = null,    // to verify disposals
+        onSubscribeCounter: AtomicInteger? = null   // to verify (non-)subscription
     ): Single<String> =
         Observable.create<String> { emitter ->
             println("SUB $name on ${Thread.currentThread().name}")
@@ -346,21 +348,27 @@ class ApplicativeTest {
             }
         }
             .doOnDispose { onDisposeCounter?.incrementAndGet() }
+            .doOnSubscribe { onSubscribeCounter?.incrementAndGet() }
             .singleOrError()
             .subscribeOn(io())
 
     @Test
     fun error_in_middle_mapOver_stops_following_zipOvers() {
-        val disposeCounter = AtomicInteger(0)
+        // s6 sits after the error point behind flatMapWith (sequential), so it
+        // must never be subscribed. s7 and s8 are zipWith sources: Single.zip
+        // subscribes both branches eagerly, so eager subscription there is
+        // expected Rx semantics, not a DSL violation; on error the whole
+        // pipeline is disposed and no values are emitted.
+        val s6SubscribeCounter = AtomicInteger(0)
 
         val s1 = Single.just("A")
         val s2 = Single.just(2)
         val s3 = Single.error<String>(RuntimeException("boom"))
-        val s4 = createBlockingSingle("C", onDisposeCounter = disposeCounter)
-        val s5 = createBlockingSingle("D", onDisposeCounter = disposeCounter)
-        val s6 = createBlockingSingle("E", onDisposeCounter = disposeCounter)
-        val s7 = createBlockingSingle("F", onDisposeCounter = disposeCounter)
-        val s8 = createBlockingSingle("G", onDisposeCounter = disposeCounter)
+        val s4 = createBlockingSingle("C")
+        val s5 = createBlockingSingle("D")
+        val s6 = createBlockingSingle("E", onSubscribeCounter = s6SubscribeCounter)
+        val s7 = createBlockingSingle("F")
+        val s8 = createBlockingSingle("G")
 
         val service: (String, Int, String, String, String, String, String, String) -> String =
             { a, b, c, d, e, f, g, h -> listOf(a, b, c, d, e, f, g, h).joinToString(";") }
@@ -412,14 +420,22 @@ class ApplicativeTest {
         val to = result.test()
         to.awaitDone(3, TimeUnit.SECONDS)
             .assertError { it.message == "boom" }
+            .assertNoValues()
 
-        check(disposeCounter.get() == 0) { "Se suscribieron ramas posteriores pese al error" }
+        assertEquals(
+            0, s6SubscribeCounter.get(),
+            "flatMapWith branch after the error must not be subscribed"
+        )
 
         val to2 = result2.test()
         to2.awaitDone(3, TimeUnit.SECONDS)
             .assertError { it.message == "boom" }
+            .assertNoValues()
 
-        check(disposeCounter.get() == 0) { "Se suscribieron ramas posteriores pese al error" }
+        assertEquals(
+            0, s6SubscribeCounter.get(),
+            "flatMapWith branch after the error must not be subscribed"
+        )
     }
 
     fun serviceA(

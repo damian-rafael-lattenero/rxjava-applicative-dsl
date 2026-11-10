@@ -142,12 +142,13 @@ infix fun <A : Any, B : Any> Observable<(A) -> B>.pair(stream: Observable<A>): O
     Observable.zip(this, stream) { f, a -> f(a) }
 
 /**
- * **Stream Chain (flatMap)**.
- * Sequential processing - waits for upstream to emit before processing downstream.
+ * **Stream Chain (concatMap)**.
+ * Sequential processing - each emitted function's full pass over [stream]
+ * completes before the next function starts; inner streams never interleave.
  */
 @JvmName("chainStreams")
 infix fun <A : Any, B : Any> Observable<(A) -> B>.chain(stream: Observable<A>): Observable<B> =
-    this.flatMap { f -> stream.map(f) }
+    this.concatMap { f -> stream.map(f) }
 
 /**
  * **Stream Processor Chain (flatMap with stream functions)**.
@@ -164,6 +165,11 @@ infix fun <A : Any, B : Any> Flowable<(A) -> B>.combine(stream: Flowable<A>): Fl
 infix fun <A : Any, B : Any> Flowable<(A) -> B>.pair(stream: Flowable<A>): Flowable<B> =
     Flowable.zip(this, stream) { f, a -> f(a) }
 
+/**
+ * **Flowable Stream Chain (concatMap)**.
+ * Sequential processing - each emitted function's full pass over [stream]
+ * completes before the next function starts; inner streams never interleave.
+ */
 @JvmName("flowableChain")
 infix fun <A : Any, B : Any> Flowable<(A) -> B>.chain(stream: Flowable<A>): Flowable<B> =
-    this.flatMap { f -> stream.map(f) }
+    this.concatMap { f -> stream.map(f) }

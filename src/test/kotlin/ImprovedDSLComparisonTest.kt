@@ -175,12 +175,12 @@ class ImprovedDSLComparisonTest {
         @DisplayName("Should execute truly in parallel (not sequential)")
         fun `parallel operations - verify concurrent execution`() {
             val executionOrder = Collections.synchronizedList(mutableListOf<String>())
-            val startLatch = CountDownLatch(3)  // Esperar a que todos empiecen
+            val startLatch = CountDownLatch(3)  // Wait for all three to start
 
             fun trackableSingle(name: String, delayMs: Long) =
                 Single.fromCallable {
                     executionOrder.add("$name-start")
-                    startLatch.countDown()  // Notificar que empezó
+                    startLatch.countDown()  // Signal that this one started
                     Thread.sleep(delayMs)
                     executionOrder.add("$name-end")
                     name
@@ -194,7 +194,7 @@ class ImprovedDSLComparisonTest {
                 .zipWith(trackableSingle("C", 50))
                 .blockingGet()
 
-            // Esperar a que todos hayan empezado
+            // Wait for all three to have started
             startLatch.await(1, TimeUnit.SECONDS)
 
             val order = executionOrder.joinToString(";")
@@ -401,7 +401,7 @@ class ImprovedDSLComparisonTest {
                 .liftSingle()
                 .flatMapWith(Single.just("first"))
                 .flatMapWith(errorSingle)
-                .flatMapWith(notCalledSingle)  // ✅ Ahora funciona
+                .flatMapWith(notCalledSingle)  // ✅ Works now
                 .test()
             
             result.assertError { it.message == "Test error" }

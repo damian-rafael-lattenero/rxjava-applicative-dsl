@@ -1,6 +1,8 @@
 import io.reactivex.rxjava3.core.Flowable
 import org.junit.jupiter.api.Test
 import utils.liftFlowable
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertTrue
 
 class FlowableStreamDSL11ParameterTest {
 
@@ -144,37 +146,30 @@ class FlowableStreamDSL11ParameterTest {
             .pair(regulatoryStream)
             .pair(timeWindowStream)
 
-        // Subscribe and collect results
-        val results = mutableListOf<TradingRiskProfile>()
-
-        riskAssessmentResult
+        // Subscribe and collect results deterministically (no wall-clock waits)
+        val results = riskAssessmentResult
             .take(3)  // Limit results
-            .subscribe(
-                { profile ->
-                    println(
-                        "🎯 RISK ANALYSIS: ${profile.symbol} -> ${profile.recommendation} (Risk: ${
-                            String.format(
-                                "%.2f",
-                                profile.riskScore
-                            )
-                        })"
+            .test()
+            .awaitDone(5, TimeUnit.SECONDS)
+            .assertComplete()
+            .assertNoErrors()
+            .values()
+
+        results.forEach { profile ->
+            println(
+                "🎯 RISK ANALYSIS: ${profile.symbol} -> ${profile.recommendation} (Risk: ${
+                    String.format(
+                        "%.2f",
+                        profile.riskScore
                     )
-                    results.add(profile)
-                },
-                { error ->
-                    println("❌ Error: $error")
-                },
-                {
-                    println("✅ Stream completed with ${results.size} risk assessments")
-                }
+                })"
             )
+        }
 
-        // Wait a moment for async processing
-        Thread.sleep(1000)
-
-        // Assertions
-        assert(results.isNotEmpty()) { "Should have generated risk assessments" }
-        assert(results.all { it.symbol == "AAPL" }) { "All results should be for AAPL" }
+        // Assertions (kotlin.test: enforced, unlike the stdlib assert() which is
+        // a no-op when JVM assertions are disabled)
+        assertTrue(results.isNotEmpty(), "Should have generated risk assessments")
+        assertTrue(results.all { it.symbol == "AAPL" }, "All results should be for AAPL")
 
         println("✅ Test completed successfully with ${results.size} results")
     }
