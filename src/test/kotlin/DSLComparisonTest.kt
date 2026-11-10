@@ -79,7 +79,7 @@ class DSLComparisonTests {
         val dslResult: Single<String> =
             ::buildUserSummary.liftSingle()
                 .flatMapWith(getUserService())
-                .flatMapWith(getProfileService("u1"))  // En realidad sería automático con el DSL
+                .flatMapWith(getProfileService("u1"))  // In real use the DSL would wire this automatically
                 .flatMapWith(getPreferencesService("p1"))
                 .flatMapWith(getSettingsService("s1"))
                 .flatMapWith(getThemeService("t1"))

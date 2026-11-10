@@ -50,7 +50,7 @@ class ApplicativeTest {
         val name: AppName,
         val description: Description?,   // nullable wrapper
         val version: VersionCode,
-        val active: Active,             // Boolean “pelado”
+        val active: Active,             // raw Boolean
         val owner: Owner,
         val platform: Platform,
         val region: Region,
@@ -332,9 +332,9 @@ class ApplicativeTest {
 
     private fun createBlockingSingle(
         name: String,
-        subscribeGate: CountDownLatch? = null,  // opcional: barrera para comprobar concurrencia
-        emitGate: CountDownLatch? = null,       // opcional: retener emision para ordenar tiempos
-        onDisposeCounter: AtomicInteger? = null // para verificar disposals
+        subscribeGate: CountDownLatch? = null,  // optional: barrier to verify concurrency
+        emitGate: CountDownLatch? = null,       // optional: hold emission to order timings
+        onDisposeCounter: AtomicInteger? = null // to verify disposals
     ): Single<String> =
         Observable.create<String> { emitter ->
             println("SUB $name on ${Thread.currentThread().name}")
@@ -413,13 +413,13 @@ class ApplicativeTest {
         to.awaitDone(3, TimeUnit.SECONDS)
             .assertError { it.message == "boom" }
 
-        check(disposeCounter.get() == 0) { "Se suscribieron ramas posteriores pese al error" }
+        check(disposeCounter.get() == 0) { "Branches after the error were subscribed" }
 
         val to2 = result2.test()
         to2.awaitDone(3, TimeUnit.SECONDS)
             .assertError { it.message == "boom" }
 
-        check(disposeCounter.get() == 0) { "Se suscribieron ramas posteriores pese al error" }
+        check(disposeCounter.get() == 0) { "Branches after the error were subscribed" }
     }
 
     fun serviceA(
