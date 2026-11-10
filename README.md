@@ -238,7 +238,7 @@ pipeline.runK(userId).subscribe { result ->
 |----------|-------------|----------|
 | `combine(stream)` | combineLatest - re-evaluate on any emission | Reactive |
 | `pair(stream)` | zip - wait for both to emit | Synchronized |
-| `chain(stream)` | flatMap - sequential processing | Sequential |
+| `chain(stream)` | concatMap - sequential processing | Sequential |
 
 ---
 
